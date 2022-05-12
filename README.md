@@ -1,6 +1,4 @@
-# nuk-network-login
-# !!! MAC 用戶ㄅ歉，目前不支援 !!!
-## 高大宿網小幫手~
+# 高大宿網小幫手~
 
 ![image](https://user-images.githubusercontent.com/31657781/168145714-d15efdcd-ce08-4a20-a7cd-3a0cc0a3173d.png)
 
@@ -12,6 +10,8 @@
 - 解壓縮
 - 執行EXE檔
 - 結束~
+- [Releases](https://github.com/henry753951/nuk-network-login/releases)
+### !!! MAC 用戶ㄅ歉，目前不支援 !!!
 
 # Developing
 - 超量自動切換帳號
