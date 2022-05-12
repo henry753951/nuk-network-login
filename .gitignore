@@ -1,0 +1,5 @@
+/build
+/data copy.json
+/dist
+/nuk-net-auto-connect.spec
+/__pycache__

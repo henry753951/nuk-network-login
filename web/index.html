@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>NUK 宿網小幫手</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="./css/bootstrap.min.css" rel="stylesheet" type="text/css">
+    <link href="./css/all.min.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="./js/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript" src="./js/all.min.js"></script>
+    <script type="text/javascript" src="./vue.js"></script>
+    <script type="text/javascript" src="/eel.js"></script>
+    <link rel="stylesheet" type="text/css" href="./css/notie.min.css">
+    <!-- eel.js 這個是必需的  -->
+</head>
+<style>
+    body {
+        height: 100vh;
+        user-select: none;
+        -moz-user-select: none;
+        -webkit-user-select: none;
+    }
+    
+    .badge {
+        min-width: 60px;
+    }
+    
+    .status-bar {
+        position: fixed;
+        width: 100%;
+        bottom: 0;
+        background-color: rgb(245, 245, 245);
+    }
+    
+    .h-100-30 {
+        height: calc(100% - 30px)!important
+    }
+    
+    .border {
+        border: 1px solid black;
+        border-radius: 15px;
+    }
+    
+    .rounded {
+        border-radius: 20px!important;
+    }
+    
+    .select-div:hover {
+        background-color: rgba(229, 229, 235, 0.904);
+        cursor: pointer;
+    }
+    
+    .select-div.selected {
+        background-color: rgba(229, 229, 235, 0.904);
+    }
+</style>
+
+<body>
+    <div id="app" class="d-flex h-100 flex-column">
+        <div class="d-flex p-2 gap-2 h-100-30 mb-5">
+            <div class="w-100 border p-3 d-flex flex-column">
+                <p>帳號列表:</p>
+                <div class="w-100 border p-3 h-100 overflow-auto" style="max-height:100%">
+                    <div class="select-div p-2" :class=" { 'selected' : select==index}" v-for="(user , index) in users" @click="select=index">
+                        <div class="d-flex">{{user.username}} <span v-if="selected_user==index" class="ms-auto badge rounded-pill bg-primary">預設</span> </div>
+                    </div>
+                </div>
+                <div class="d-flex m-1">
+                    <button type="button" class="ms-auto btn btn-primary rounded" @click="addingUser=true"><i class="fa-solid fa-user-plus"></i> 新增帳號</button>
+                    <button type="button" class="mx-1 btn btn-danger rounded" @click="rmUser(users[select].username)"><i class="fa-solid fa-user-minus"></i> 移除所選帳號</button>
+                </div>
+            </div>
+            <div class="w-100 border p-3 d-flex flex-column" v-if="!addingUser">
+                <div>
+                    <template v-if="select!=null">
+                        <p>已選擇的帳號 : {{users[select].username}}</p>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-primary rounded" @click="login(users[select].username)">登入此帳號</button>
+                            <button type="button" class="btn btn-dark rounded" @click="setDefault(select)">設為預設</button>
+                        </div>
+                    </template>
+                </div>
+                <div class="card mt-auto my-2">
+                    <div class="card-body">
+                        <p>目前登入帳號 : <br>{{currentSession}}</p>
+                        <p>登入時間 : <br>{{status.LoginTime}}</p>
+                    </div>
+                    <button class="btn btn-secondary m-2" type="button" @click="update" :disabled="loading">刷新資料</button>
+                </div>
+                <div class="d-grid gap-2">
+                    <button v-if="LoginOnBoot" class="btn btn-primary" type="button" @click="LoginOnBoot=false;switchRunOnBoot(false)" :disabled="selected_user==null">開機自動登入 : 開啟</button>
+                    <button v-else class="btn btn-secondary" type="button" @click="LoginOnBoot=true;switchRunOnBoot(true)" :disabled="selected_user==null">開機自動登入 : 關閉</button>
+                </div>
+            </div>
+            <div class="w-100 border p-3 d-flex flex-column" v-else>
+                <div class="my-auto">
+                    <h3>新增帳號</h3>
+                    <div class="mb-3">
+                        <label class="form-label">帳號</label>
+                        <input type="email" class="form-control" v-model="addUserData.username">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">密碼</label>
+                        <input type="password" class="form-control" v-model="addUserData.password">
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-primary w-100" @click="addUser(addUserData.username,addUserData.password)">新增</button>
+                        <button class="btn btn-secondary w-100" @click="addingUser=false">取消</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="status-bar p-1">
+            <div class="d-flex gap-1">
+                <span class="me-auto">狀態 : {{message}}</span>
+                <div class="d-flex">
+                    <span style="color:rgb(19, 190, 19);"><i class="fa-solid fa-wifi"></i></span>
+                    <span style="color:red;"><i class="fa-solid fa-triangle-exclamation"></i></span>
+                </div>
+                <span class="badge rounded-pill bg-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="總流量">
+                    <i class="fa-solid fa-server"></i>
+                    <span class="mx-1">{{status.total}}</span>
+                </span>
+                <span class="badge rounded-pill bg-dark" data-bs-toggle="tooltip" data-bs-placement="top" title="上傳">
+                    <i class="fa-solid fa-circle-chevron-up"></i>
+                    <span class="mx-1">{{status.upload}}</span>
+                </span>
+                <span class="badge rounded-pill bg-dark" data-bs-toggle="tooltip" data-bs-placement="top" title="下載">
+                    <i class="fa-solid fa-circle-chevron-down"></i>
+                    <span class="mx-1">{{status.download}}</span>
+                </span>
+            </div>
+        </div>
+    </div>
+
+
+</body>
+<script>
+    const {
+        createApp
+    } = Vue
+
+    createApp({
+        data() {
+            return {
+                addUserData: {
+                    username: "",
+                    password: ""
+                },
+                addingUser: false,
+                loading: false,
+                message: '正常',
+                status: {
+                    total: "...",
+                    download: "...",
+                    upload: "...",
+                    LoginTime: " "
+                },
+                currentSession: '',
+                users: [],
+                select: null,
+                selected_user: null,
+                LoginOnBoot: false
+            }
+        },
+        mounted() {
+            this.getUsers()
+            this.getCurrentSession()
+        },
+        methods: {
+            async update() {
+                this.loading = true
+                await this.getUsers()
+                await this.getCurrentSession()
+                await notie.alert({
+                    text: "刷新成功",
+                })
+                this.loading = false
+            },
+            async getCurrentSession() {
+                var data = await eel.getCurrentSession()()
+                this.status = data.status
+                this.currentSession = data.data
+            },
+            async getUsers() {
+                var data = await eel.getUsers()()
+                this.users = data.users
+                this.select = data.select
+                this.selected_user = data.select
+                this.LoginOnBoot = data.LoginOnBoot
+            },
+            async switchRunOnBoot(sw) {
+                await eel.switchRunOnBoot(sw)()
+            },
+            async login(username) {
+                var msg = await eel.login(username)()
+                this.message = msg['msg']
+                if (msg['msg'] == '登入成功') {
+                    notie.alert({
+                        type: 1,
+                        text: "登入成功",
+                    })
+                } else {
+                    notie.alert({
+                        type: 3,
+                        text: "登入失敗",
+                    })
+                }
+
+                await this.getCurrentSession()
+            },
+            async setDefault(index) {
+                var msg = await eel.setDefault(index)()
+                this.message = msg['msg']
+                await this.getUsers()
+                notie.alert({
+                    type: 1,
+                    text: "已設為開機預設帳號",
+                })
+            },
+            async addUser(username, password) {
+                var msg = await eel.addUser(username, password)()
+                this.message = msg['msg']
+                await this.getUsers()
+                this.addingUser = false
+                notie.alert({
+                    type: 1,
+                    text: "新增成功",
+                })
+            },
+            async rmUser(username) {
+                var msg = await eel.rmUser(username)()
+                this.message = msg['msg']
+                await this.getUsers()
+                notie.alert({
+                    type: 1,
+                    text: "移除成功",
+                })
+            },
+        }
+    }).mount('#app')
+</script>
+
+<script type="text/javascript">
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+
+    function iEsc() {
+        return false;
+    }
+
+    function iRec() {
+        return true;
+    }
+
+    function DisableKeys() {　
+        if (event.ctrlKey || event.shiftKey || event.altKey) {　　
+            window.event.returnValue = false;　　
+            iEsc();　
+        }
+    }
+    document.ondragstart = iEsc;
+    document.onkeydown = DisableKeys;
+    document.oncontextmenu = iEsc;
+    if (typeof document.onselectstart != "undefined ") {　
+        document.onselectstart = iEsc;
+    } else {　
+        document.onmousedown = iEsc;　
+        document.onmouseup = iRec;
+    }
+
+    function DisableRightClick(qsyzDOTnet) {
+        if (window.Event) {　
+            if (qsyzDOTnet.which == 2 || qsyzDOTnet.which == 3) {　　
+                iEsc();　
+            } else {　　
+                if (event.button == 2 || event.button == 3) {　　　
+                    event.cancelBubble = true;
+                    event.returnValue = false;　　　
+                    iEsc();　　
+                }　
+            }
+        }
+    }
+</script>
+<script src="./js/notie.min.js"></script>
+
+
+</html>
