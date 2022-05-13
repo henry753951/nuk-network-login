@@ -115,8 +115,8 @@
             <div class="d-flex gap-1">
                 <span class="me-auto">狀態 : {{message}}</span>
                 <div class="d-flex">
-                    <span style="color:rgb(19, 190, 19);"><i class="fa-solid fa-wifi"></i></span>
-                    <span style="color:red;"><i class="fa-solid fa-triangle-exclamation"></i></span>
+                    <span style="color:rgb(19, 190, 19);" data-bs-toggle="tooltip" data-bs-placement="top" title="未超量"><i class="fa-solid fa-wifi"></i></span>
+                    <span style="color:red;" data-bs-toggle="tooltip" data-bs-placement="top" title="超量"><i class="fa-solid fa-triangle-exclamation"></i></span>
                 </div>
                 <span class="badge rounded-pill bg-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="總流量">
                     <i class="fa-solid fa-server"></i>
@@ -257,7 +257,7 @@
     }
 
     function DisableKeys() {　
-        if (event.ctrlKey || event.shiftKey || event.altKey) {　　
+        if (event.altKey) {　　
             window.event.returnValue = false;　　
             iEsc();　
         }
