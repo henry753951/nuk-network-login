@@ -10,7 +10,7 @@
 - 解壓縮
 - 執行EXE檔
 - 結束~  
-[ [Releases](https://github.com/henry753951/nuk-network-login/releases) ] - v1.0
+[ [載點](https://github.com/henry753951/nuk-network-login/releases) ] - v1.0
 ### !!! MAC 用戶ㄅ歉，目前不支援 !!!
 
 # Developing
